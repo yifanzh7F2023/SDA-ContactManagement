@@ -112,3 +112,36 @@ class ContactModel:
                 "group_contacts": normal_group_contacts
             }
         }
+
+    def toggle_pin_status(self, username, contact_name, contact_type):
+        user_contact_document = self.contact_collection.find_one({"username": username})
+        
+        if not user_contact_document:
+            return False, "User not found."
+
+        # Determine the field based on the contact type
+        field = 'group_contacts' if contact_type == 'group' else 'individual_contacts'
+        
+        # Find the contact and toggle its is_pinned status
+        contact_to_update = None
+        for contact in user_contact_document.get(field, []):
+            if contact['name'] == contact_name:
+                contact_to_update = contact
+                break
+        
+        if contact_to_update:
+            new_status = not contact_to_update.get('is_pinned', False)
+
+            self.contact_collection.update_one(
+                {"username": username, f"{field}.name": contact_name},
+                {"$pull": {field: {"name": contact_name}}}
+            )
+
+            contact_to_update['is_pinned'] = new_status
+            self.contact_collection.update_one(
+                {"username": username},
+                {"$push": {field: contact_to_update}}
+            )
+            return True, "Contact pin status updated."
+        else:
+            return False, "Contact not found."

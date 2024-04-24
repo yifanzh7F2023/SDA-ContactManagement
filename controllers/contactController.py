@@ -64,6 +64,13 @@ def create_individual_contact():
     else:
         return jsonify({"msg": "Failed to create individual contact"}), 409
 
+@contact_blueprint.route('/individual_contact/<username>/<contact_name>', methods=['DELETE'])
+def delete_individual_contact(username, contact_name):
+    if individual_model.delete_individual_contact(username, contact_name):
+        return jsonify({"msg": "Individual contact deleted successfully"}), 200
+    else:
+        return jsonify({"msg": "Failed to delete individual contact or contact not found"}), 404
+
 @contact_blueprint.route('/group_contact/<group_id>', methods=['GET'])
 def get_group_contact(group_id):
     group_contact = groupContact_collection.find_one({"group_id": group_id})
@@ -84,3 +91,12 @@ def get_all_group_contacts():
         return jsonify(group_contacts_list), 200
     except Exception as e:
         return jsonify({"msg": "Failed to fetch group contacts", "error": str(e)}), 500
+
+@contact_blueprint.route('/contacts/pin/<username>/<contact_name>/<contact_type>', methods=['PUT'])
+def toggle_pin_contact(username, contact_name, contact_type):
+    success, message = contact_model.toggle_pin_status(username, contact_name, contact_type)
+
+    if success:
+        return jsonify({"msg": message}), 200
+    else:
+        return jsonify({"msg": message}), 400

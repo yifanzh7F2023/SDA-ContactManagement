@@ -40,3 +40,24 @@ class IndividualContactModel:
             return result.inserted_id
         else:
             return None
+        
+    def delete_individual_contact(self, username, contact_name):
+        delete_result = self.contact_collection.delete_one({
+            "username": username,
+            "name": contact_name
+        })
+
+        if delete_result.deleted_count == 1:
+            self.all_contacts_collection.update_one(
+                {"username": username},
+                {"$pull": {"individual_contacts": {"name": contact_name}}}
+            )
+            
+            # Also remove this user from the deleted contact's list
+            self.all_contacts_collection.update_one(
+                {"username": contact_name},
+                {"$pull": {"individual": {"name": username}}}
+            )
+
+            return True
+        return False
