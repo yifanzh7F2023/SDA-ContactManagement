@@ -11,15 +11,27 @@ group_model = GroupContactModel()
 individual_model = IndividualContactModel()
 
 @contact_blueprint.route('/contacts/<username>', methods=['GET'])
-# @jwt_required()
 def get_contacts_by_user(username):
     contacts = contact_model.get_contacts_by_username(username)
     return jsonify(contacts), 200
 
+@contact_blueprint.route('/contacts/pinned/<username>', methods=['GET'])
+def get_pinned_contacts(username):
+    pinned_contacts = contact_model.get_pinned_contacts(username)
+    return jsonify(pinned_contacts), 200
+
+@contact_blueprint.route('/contacts/normal/<username>', methods=['GET'])
+def get_normal_contacts(username):
+    normal_contacts = contact_model.get_normal_contacts(username)
+    return jsonify(normal_contacts), 200
+
+@contact_blueprint.route('/contacts/all/<username>', methods=['GET'])
+def get_all_contacts(username):
+    all_contacts = contact_model.get_all_contacts(username)
+    return jsonify(all_contacts), 200
+
 @contact_blueprint.route('/group_contact', methods=['POST'])
-# @jwt_required()
 def create_group_contact():
-    # username = get_jwt_identity()
     data = request.json
     name = data.get('name')
     members = data.get('members')
@@ -35,11 +47,9 @@ def create_group_contact():
         return jsonify({"msg": "Failed to create group contact"}), 409
 
 @contact_blueprint.route('/individual_contact', methods=['POST'])
-# @jwt_required()
 def create_individual_contact():
-    # username = get_jwt_identity()
     data = request.json
-    username = data.get('username')  # Assume username extraction from JWT
+    username = data.get('username')
     name = data.get('name')
     email = data.get('email')
     is_pinned = data.get('is_pinned', False)
@@ -55,7 +65,6 @@ def create_individual_contact():
         return jsonify({"msg": "Failed to create individual contact"}), 409
 
 @contact_blueprint.route('/group_contact/<group_id>', methods=['GET'])
-# @jwt_required()
 def get_group_contact(group_id):
     group_contact = groupContact_collection.find_one({"group_id": group_id})
     if group_contact:
@@ -65,7 +74,6 @@ def get_group_contact(group_id):
         return jsonify({"msg": "Group contact not found"}), 404
 
 @contact_blueprint.route('/group_contacts', methods=['GET'])
-# @jwt_required()
 def get_all_group_contacts():
     try:
         group_contacts = groupContact_collection.find({})

@@ -12,6 +12,17 @@ class ContactModel:
                 if '_id' in member:
                     member['_id'] = str(member['_id'])
         return doc
+    
+    def _convert_objectid(self, document):
+        if isinstance(document, list):
+            return [self._convert_objectid(item) for item in document]
+        if isinstance(document, dict):
+            for key, value in document.items():
+                if isinstance(value, ObjectId):
+                    document[key] = str(value)
+                elif isinstance(value, (dict, list)):
+                    document[key] = self._convert_objectid(value)
+        return document
 
     def get_contacts_by_username(self, username):
         results = self.contact_collection.find({"username": username})
@@ -24,3 +35,80 @@ class ContactModel:
                 contact['individual_contacts'] = [self._convert_id(ic) for ic in contact['individual_contacts']]
             contacts_list.append(contact)
         return contacts_list
+    
+    def get_pinned_contacts(self, username):
+        contact_document = self.contact_collection.find_one({"username": username})
+        if not contact_document:
+            return []
+
+        # Filter for pinned contacts
+        individual_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('individual_contacts', [])
+            if contact.get('is_pinned')
+        ]
+        group_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('group_contacts', [])
+            if contact.get('is_pinned')
+        ]
+
+        return {'individual_contacts': individual_contacts, 'group_contacts': group_contacts}
+    
+    def get_normal_contacts(self, username):
+        contact_document = self.contact_collection.find_one({"username": username})
+        if not contact_document:
+            return []
+
+        # Filter for non-pinned (normal) contacts
+        individual_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('individual_contacts', [])
+            if not contact.get('is_pinned')
+        ]
+        group_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('group_contacts', [])
+            if not contact.get('is_pinned')
+        ]
+
+        return {'individual_contacts': individual_contacts, 'group_contacts': group_contacts}
+    
+    def get_all_contacts(self, username):
+        contact_document = self.contact_collection.find_one({"username": username})
+        if not contact_document:
+            return {
+                "pinned": {
+                    "individual_contacts": [],
+                    "group_contacts": []
+                },
+                "others": {
+                    "individual_contacts": [],
+                    "group_contacts": []
+                }
+            }
+
+        # Separate the contacts based on is_pinned flag
+        pinned_individual_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('individual_contacts', [])
+            if contact.get('is_pinned')
+        ]
+        normal_individual_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('individual_contacts', [])
+            if not contact.get('is_pinned')
+        ]
+        pinned_group_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('group_contacts', [])
+            if contact.get('is_pinned')
+        ]
+        normal_group_contacts = [
+            self._convert_objectid(contact) for contact in contact_document.get('group_contacts', [])
+            if not contact.get('is_pinned')
+        ]
+
+        return {
+            "pinned": {
+                "individual_contacts": pinned_individual_contacts,
+                "group_contacts": pinned_group_contacts
+            },
+            "others": {
+                "individual_contacts": normal_individual_contacts,
+                "group_contacts": normal_group_contacts
+            }
+        }

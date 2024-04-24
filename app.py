@@ -8,7 +8,7 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app,resources={r"/*":{"origins":"*"}})
 # app.config['JWT_SECRET_KEY'] = '666'
 # jwt = JWTManager(app)
 app.register_blueprint(contact_blueprint, url_prefix='/')
@@ -28,4 +28,4 @@ except Exception as e:
     print(e)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5002)
