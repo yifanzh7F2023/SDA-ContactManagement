@@ -81,6 +81,17 @@ def get_group_contact(group_id):
     else:
         return jsonify({"msg": "Group contact not found"}), 404
 
+@contact_blueprint.route('/group_contact/<group_id>', methods=['DELETE'])
+def delete_group_contact(group_id):
+    delete_result = groupContact_collection.delete_one({"group_id": group_id})
+
+    if delete_result.deleted_count == 1:
+        contacts_collection.update_many({}, {"$pull": {"group_contacts": {"group_id": group_id}}})
+
+        return jsonify({"msg": "Group contact successfully deleted"}), 200
+    else:
+        return jsonify({"msg": "Group contact not found or already deleted"}), 404
+
 @contact_blueprint.route('/group_contacts', methods=['GET'])
 def get_all_group_contacts():
     try:
