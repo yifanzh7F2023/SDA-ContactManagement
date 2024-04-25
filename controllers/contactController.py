@@ -52,6 +52,7 @@ def create_individual_contact():
     username = data.get('username')
     name = data.get('name')
     email = data.get('email')
+    id = data.get('id')
     is_pinned = data.get('is_pinned', False)
 
     if not username:
@@ -59,7 +60,7 @@ def create_individual_contact():
     if not name or not email:
         return jsonify({"msg": "Name and email are required"}), 400
 
-    if individual_model.create_individual_contact(username, name, email, is_pinned):
+    if individual_model.create_individual_contact(username, name, email, id, is_pinned):
         return jsonify({"msg": "Individual contact created successfully"}), 201
     else:
         return jsonify({"msg": "Failed to create individual contact"}), 409

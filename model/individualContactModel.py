@@ -5,7 +5,7 @@ class IndividualContactModel:
         self.contact_collection = individualContact_collection
         self.all_contacts_collection = contacts_collection
 
-    def create_individual_contact(self, username, name, email, is_pinned=False):
+    def create_individual_contact(self, username, name, email, id, is_pinned=False):
         contact_document = {
             "username": username,
             "name": name,
@@ -16,6 +16,7 @@ class IndividualContactModel:
         individual_contact_document = {
         "name": name,
         "email": email,
+        "id": id,
         "is_pinned": is_pinned
         }
     
@@ -30,7 +31,7 @@ class IndividualContactModel:
             # Update contact list bidirectionally
             self.all_contacts_collection.update_one(
                 {"username": name},
-                {"$push": {"individual": {
+                {"$push": {"individual_contacts": {
                     "name": username,
                     "email": "creator's email",
                     "is_pinned": False 
